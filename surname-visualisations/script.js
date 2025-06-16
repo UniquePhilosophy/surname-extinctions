@@ -9,11 +9,11 @@ let generationIndex = 0;
 
 // Define your color mapping per nationality
 const nationalityColors = {
-  English: "#1f77b4",
-  Indian: "#ff7f0e",
-  Polish: "#2ca02c",
-  Russian: "#d62728",
-  Arabic: "#9467bd",
+  English: "#1f77b4", // blue
+  Indian: "#ff7f0e", // orange
+  Polish: "#2ca02c", // green
+  Russian: "#d62728", // red
+  Arabic: "#9467bd", // purple
   Unknown: "#7f7f7f" // fallback
 };
 
