@@ -1,13 +1,13 @@
 import csv
 import numpy as np
 
-input_file = "surnames.csv"
-output_file = "surnames_frequencies.csv"
+input_file = "enriched_surnames.csv"
+output_file = "global_surnames_frequencies.csv"
 
-with open(input_file, newline='', encoding='windows-1252') as csvfile:
+with open(input_file, newline='', encoding='utf-8') as csvfile:
     reader = list(csv.DictReader(csvfile))
-    if len(reader) != 14674:
-        raise ValueError(f"Expected 14674 surnames, found {len(reader)}")
+    if len(reader) != 12366:
+        raise ValueError(f"Expected 12366 surnames, found {len(reader)}")
 
 zipf_popularity = np.random.zipf(a=1.5, size=len(reader))
 
