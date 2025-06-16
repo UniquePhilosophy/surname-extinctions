@@ -1,7 +1,6 @@
 import csv
 import random
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
 from collections import Counter
 import numpy as np
 import os
@@ -78,7 +77,7 @@ def reproduce_generation(pop):
 
     return new_generation
 
-# Save surname frequencies to CSV
+# Track surname counts
 def write_surname_counts(population, generation_number, output_dir="surname_snapshots"):
     os.makedirs(output_dir, exist_ok=True)
     counts = Counter([p[0] for p in population])
@@ -89,39 +88,12 @@ def write_surname_counts(population, generation_number, output_dir="surname_snap
         for surname, count in sorted(counts.items(), key=lambda x: -x[1]):
             writer.writerow([surname, count])
 
-# Bubble visualisation (real-time and all surnames)
-def plot_bubbles_live(ax, surname_counts: Dict[str, int], generation: int):
-    ax.clear()
-    ax.set_title(f"Surname Distribution - Generation {generation}")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis('off')
-
-    items = sorted(surname_counts.items(), key=lambda x: -x[1])
-    max_count = items[0][1]
-    areas = [count / max_count for _, count in items]
-    radii = [np.sqrt(area) * 0.05 for area in areas]  # scale factor
-
-    cols = int(np.ceil(np.sqrt(len(items))))
-    spacing = 1 / (cols + 1)
-
-    for i, ((surname, count), radius) in enumerate(zip(items, radii)):
-        row = i // cols
-        col = i % cols
-        x = spacing + col * spacing
-        y = 1 - (spacing + row * spacing)
-
-        circle = Circle((x, y), radius=radius, color='skyblue', ec='navy', alpha=0.6)
-        ax.add_patch(circle)
-        if radius > 0.012:  # Optional: reduce threshold for labels even further
-            ax.text(x, y, surname, fontsize=6, ha='center', va='center')
-
 # Main simulation
 def run_simulation(native_file: str,
                    immigrant_file: str,
                    generations=50,
                    initial_pop_size=10000,
-                   immigration_fraction=0.2,
+                   immigration_size=2000,
                    immigration_ratios=None):
     if immigration_ratios is None:
         immigration_ratios = {}
@@ -129,25 +101,40 @@ def run_simulation(native_file: str,
     surnames, frequencies = load_native_surnames(native_file)
     immigrant_pool = load_immigrant_surnames(immigrant_file)
     pop = make_initial_population(surnames, frequencies, initial_pop_size)
+    unique_counts = []
+    total_pop_counts = []
 
     plt.ion()
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots()
 
     for gen in range(generations):
-        # Immigration as % of current population
-        immigration_size = int(len(pop) * immigration_fraction)
+        immigration_fraction = 0.395
+        current_population = len(pop)
+        immigration_size = int(current_population * immigration_fraction)
+
         immigrants = inject_immigrants(immigrant_pool, immigration_ratios, immigration_size)
         pop += immigrants
 
-        surname_counts = Counter([p[0] for p in pop])
-        print(f"Generation {gen}: {len(pop)} people, {len(surname_counts)} unique surnames")
+        total_population = len(pop)
+        unique_surnames = len(set(p[0] for p in pop))
+        total_pop_counts.append(total_population)
+        unique_counts.append(unique_surnames)
+
+        print(f"Generation {gen}: {total_population} people, {unique_surnames} unique surnames")
 
         write_surname_counts(pop, gen)
-        plot_bubbles_live(ax, surname_counts, generation=gen)
 
-        plt.pause(0.5)
+        ax.clear()
+        ax.set_title("Unique Surnames and Population Over Generations")
+        ax.set_xlabel("Generation")
+        ax.set_ylabel("Count (same scale)")
 
-        # Reproduce
+        ax.plot(unique_counts, label="Unique Surnames", color='blue', marker='o')
+        ax.plot(total_pop_counts, label="Total Population", color='red', marker='s')
+        ax.legend()
+
+        plt.pause(0.1)
+
         pop = reproduce_generation(pop)
 
     plt.ioff()
@@ -160,12 +147,11 @@ if __name__ == "__main__":
         "Polish": 0.2,
         "Arabic": 0.1,
     }
-
     run_simulation(
         native_file="surnames_sorted.csv",
         immigrant_file="global_surnames_final.csv",
         generations=50,
         initial_pop_size=10000,
-        immigration_fraction=0.2,
+        immigration_size=5000,
         immigration_ratios=immigration_ratios
     )
