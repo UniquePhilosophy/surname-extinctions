@@ -1,25 +1,38 @@
 import csv
+from collections import defaultdict
 
-input_file = "global_surnames.csv"
-output_file = "cleaned_global_surnames.csv"
+def scale_frequencies_by_ratio(input_file: str, output_file: str, target_ratio: int = 775):
+    surname_data = defaultdict(list)
 
-with open(input_file, newline='', encoding='utf-8') as infile:
-    reader = csv.DictReader(infile)
-    fieldnames = reader.fieldnames
+    with open(input_file, newline='', encoding='utf-8') as infile:
+        reader = csv.DictReader(infile)
+        for row in reader:
+            nationality = row['nationality']
+            name = row['name']
+            freq = int(row['ZipfPopularity'])
+            surname_data[nationality].append((name, freq))
 
-    print(f"Detected columns: {fieldnames}")
-    name_col = next((col for col in fieldnames if col.lower() == "name"), None)
-    if not name_col:
-        raise ValueError("Couldn't find a 'name' column in the CSV.")
-
-    with open(output_file, mode='w', newline='', encoding='utf-8') as outfile:
-        writer = csv.DictWriter(outfile, fieldnames=["nationality", "name"])
+    with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
+        fieldnames = ['nationality', 'name', 'ZipfPopularity']
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        for row in reader:
-            writer.writerow({
-                "nationality": row["nationality"],
-                "name": row[name_col].capitalize()
-            })
+        for nationality, surnames in surname_data.items():
+            freqs = [f for _, f in surnames]
+            min_f, max_f = min(freqs), max(freqs)
 
-print(f"Cleaned global surnames written to {output_file}")
+            if min_f == max_f:
+                for name, _ in surnames:
+                    writer.writerow({'nationality': nationality, 'name': name, 'ZipfPopularity': 1})
+                continue
+
+            for name, freq in surnames:
+                scaled = 1 + ((freq - min_f) * (target_ratio - 1)) / (max_f - min_f)
+                writer.writerow({'nationality': nationality, 'name': name, 'ZipfPopularity': int(round(scaled))})
+
+if __name__ == "__main__":
+    scale_frequencies_by_ratio(
+        input_file='global_surnames_bad_weightings.csv',
+        output_file='global_surnames_final.csv',
+        target_ratio=775
+    )
