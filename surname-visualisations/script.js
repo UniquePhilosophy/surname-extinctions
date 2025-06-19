@@ -63,12 +63,18 @@ function updateBubbles(data, genNumber) {
 }
 
 function animateGenerations() {
+  const genStr = generationIndex.toString().padStart(2, '0');
   loadCSVData(generationIndex).then(data => {
     updateBubbles(data, generationIndex);
+
     generationIndex = (generationIndex + 1) % generations;
-    setTimeout(animateGenerations, interval);
+
+    setTimeout(() => animateGenerations(), interval);
+  }).catch(error => {
+    console.error("Error loading generation data:", error);
   });
 }
+
 
 animateGenerations();
 

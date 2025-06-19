@@ -142,5 +142,5 @@ if __name__ == "__main__":
         native_file="surnames_sorted.csv",
         generations=50,
         initial_pop_size=10000,
-        mean_children_per_couple=2.0
+        mean_children_per_couple=2.1
     )
