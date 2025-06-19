@@ -112,7 +112,7 @@ Downfall of the model:
 │   ├── script.js               # D3.js logic
 │   └── generations/            # Generated per-gen CSVs
 ├── logs/                       # Summary statistics per generation
-├── images/                     # Screenshots for README
+├── media/                     # Screenshots for README
 ```
 
 ---
